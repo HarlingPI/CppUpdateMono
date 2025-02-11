@@ -6,8 +6,10 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 using DllUtils;
 using NUnit.Framework;
+using PIToolKit.Public.Native;
 using UnityEngine;
 
 public unsafe class DllTest
@@ -77,39 +79,23 @@ public unsafe class DllTest
 
                 handle.Free();
             }
-            ////直接通过数组元素调用
-            //{
-            //    Debug.Log("InvokeByItem-----------------------");
-            //    var invoke = DllManager.GetDelegate<ItemInvoke>(dllptr, "InstanceInvokeByItem");
-            //    TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
-            //    //for (int i = 0; i < objs.Length; i++)
-            //    //{
-            //    //    GCHandle handle = GCHandle.Alloc(objs[i], GCHandleType.Pinned);
-            //    //    IntPtr address = handle.AddrOfPinnedObject();
-            //    //    invoke(address);
-            //    //    handle.Free();
-            //    //}
-            //    fixed (TestClass* ptr = objs)
-            //    {
-            //        for (int i = 0; i < objs.Length; i++)
-            //        {
-            //            invoke(ptr + i);
-            //        }
-            //    }
+            //直接通过数组元素调用
+            {
+                Debug.Log("InvokeByItem-----------------------");
+                var invoke = DllManager.GetDelegate<ItemInvoke>(dllptr, "InstanceInvokeByItem");
+                TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
 
+                //IntPtr* arrayPtr = (IntPtr*)Marshal.UnsafeAddrOfPinnedArrayElement(objs, 0);
 
-
-            //    //var obj = new TestClass(42);
-            //    //var address = Marshal.AllocHGlobal(Marshal.SizeOf<TestClass>());
-            //    //Marshal.StructureToPtr(obj, address, true);
-            //    //invoke(address);
-            //    //Marshal.FreeHGlobal(address);
-
-            //    //GCHandle handle = GCHandle.Alloc(obj, GCHandleType.Pinned);
-            //    //IntPtr address = (IntPtr)Unsafe.AsPointer(ref obj);
-            //    //invoke(address);
-            //    //handle.Free();
-            //}
+                //for (int i = 0; i < objs.Length; i++)
+                //{
+                //    invoke(arrayPtr[i].ToPointer());
+                //}
+                for (int i = 0; i < objs.Length; i++)
+                {
+                    invoke(objs[i].GetPointer());
+                }
+            }
         }
         catch (Exception)
         {
