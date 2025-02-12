@@ -1,13 +1,5 @@
 {
   "dependencies": {
-    "com.harling.pitoolkit": {
-      "version": "file:C:/Users/Harling/Desktop/PIToolKit/Unity",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.modules.ui": ""
-      }
-    },
     "com.unity.collab-proxy": {
       "version": "2.2.0",
       "depth": 0,

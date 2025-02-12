@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -11,6 +12,7 @@ using DllUtils;
 using NUnit.Framework;
 using PIToolKit.Public.Native;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public unsafe class DllTest
 {
@@ -48,7 +50,7 @@ public unsafe class DllTest
         Debug.Log(str);
     }
 
-    public delegate void ArrayDelegate(IntPtr array);
+    public delegate void SetArray(IntPtr array);
     public delegate void IndexInvoke(int index);
     public delegate void ItemInvoke(void* item);
     [Test]
@@ -66,7 +68,7 @@ public unsafe class DllTest
             {
                 TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
                 Debug.Log("InvokeByIndex-----------------------");
-                var setarray = DllManager.GetDelegate<ArrayDelegate>(dllptr, "SetArray");
+                var setarray = DllManager.GetDelegate<SetArray>(dllptr, "SetArray");
                 var handle = GCHandle.Alloc(objs, GCHandleType.Pinned);
                 IntPtr address = handle.AddrOfPinnedObject();
                 setarray(address);
@@ -108,7 +110,73 @@ public unsafe class DllTest
 
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    public delegate void SwapInvoke(int start,int count);
+    [Test]
+    public void SwapItemTest()
+    {
+        TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
+        Debug.Log($"交换前-------------");
+        for (int i = 0;i < objs.Length;i++)
+        {
+            objs[i].TestFunc();
+        }
+
+
+        var dllptr = DllManager.LoadLibrary(Application.dataPath + "/Plugins/x86_64/NativeSDK.dll");
+        var setarray = DllManager.GetDelegate<SetArray>(dllptr, "SetArray");
+        var handle = GCHandle.Alloc(objs, GCHandleType.Pinned);
+        IntPtr address = handle.AddrOfPinnedObject();
+        setarray(address);
+
+        var swapfunc = DllManager.GetDelegate<SwapInvoke>(dllptr, "SwapItem");
+        swapfunc(0,2);
+        handle.Free();
+        DllManager.FreeLibrary(dllptr);
+
+        Debug.Log($"交换后-------------");
+        for (int i = 0; i < objs.Length; i++)
+        {
+            objs[i].TestFunc();
+        }
+    }
+
+    [Test]
+    public void PointerAccessTimeTest()
+    {
+        int count = 100000;
+
+        TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
+
+        var time = ReckonTime(() =>
+        {
+            for (int i = 0;i< count;i++)
+            {
+                objs[0].GetPointer();
+            }
+        });
+        Debug.Log($"GetPointer耗时：{time}ms");
+
+        IntPtr* arrayPtr = (IntPtr*)Marshal.UnsafeAddrOfPinnedArrayElement(objs, 0);
+        time = ReckonTime(() =>
+        {
+            for (int i = 0; i < count; i++)
+            {
+                arrayPtr[0].ToPointer();
+            }
+        });
+        Debug.Log($"MarshalArray耗时：{time}ms");
+    }
+    public static double ReckonTime(Action action)
+    {
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+        action();
+        watch.Stop();
+        TimeSpan timespan = watch.Elapsed;
+        return timespan.TotalMilliseconds;
+    }
+
+
     public class TestClass
     {
         public int ID;

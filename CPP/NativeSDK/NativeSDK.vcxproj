@@ -155,7 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LogTest.cpp" />
+    <ClCompile Include="CppTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
