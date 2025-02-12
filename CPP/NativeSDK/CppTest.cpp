@@ -4,57 +4,6 @@
 #include <string>
 
 using namespace std;
-//#ifdef _WIN32
-//#define DLLEXPORT __declspec(dllexport)
-//#else
-//#define DLLEXPORT
-//#endif
-//
-//extern "C"
-//{
-//	//C# VECTOR STRUCT
-//	struct Vector3
-//	{
-//		float x;
-//		float y;
-//		float z;
-//	};
-//	//c# function for c++ to call
-//	int(*GameObjectNew)();
-//	int(*GameObjectGetTransform)(int thisHandle);
-//	void(*TransformSetPosition)(int thisHandle, Vector3 position);
-//
-//	//c++ functions for c# to call
-//	int numCreated;
-//
-//	DLLEXPORT void Init(int(*gameObjectNew)(),int(*gameObjectGetTrasform)(int),void(*transformSetPosition)(int, Vector3))
-//	{
-//		GameObjectNew = gameObjectNew;
-//		GameObjectGetTransform = gameObjectGetTrasform;
-//		TransformSetPosition = transformSetPosition;
-//
-//		numCreated = 0;
-//	}
-//	//
-//	DLLEXPORT void MonoBehaviourUpdate(int thisHandle)
-//	{
-//		if (numCreated < 10)
-//		{
-//			//获取函数handle,然后操作
-//			int goHandle = GameObjectNew();
-//			int transformHandle = GameObjectGetTransform(goHandle);
-//			float comp = 10.0f * (float)numCreated;
-//			Vector3 position = { comp, comp, comp };
-//			TransformSetPosition(transformHandle, position);
-//			numCreated++;
-//		}
-//	}
-//
-//
-//
-//
-//}
-
 #define DllExport _declspec(dllexport)
 
 extern "C"
@@ -163,6 +112,39 @@ extern "C"
 #pragma endregion
 
 
+#pragma region PropertyTest
+	typedef float(*PropertyGet)(void*);
+	typedef void(*PropertySet)(void*, float);
+
+	PropertyGet testgetter = NULL;
+	PropertySet testsetter = NULL;
+
+	DllExport void __stdcall PropertyTest(PropertyGet getter, PropertySet setter)
+	{
+		::testgetter = getter;
+		::testsetter = setter;
+
+		AppendToFile("Getter：" + to_string((UINT)getter) + "\n");
+
+		AppendToFile("Setter：" + to_string((UINT)setter) + "\n");
+	}
+
+	DllExport void __stdcall GetTest(void* obj)
+	{
+		float value = testgetter(obj);
+		AppendToFile("Value：" + to_string(value) + "\n");
+	}
+
+	DllExport void __stdcall SetTest(void* obj)
+	{
+		testsetter(obj,8192);
+	}
+
+#pragma endregion
+
+
+
+
 #pragma region UpdateTest
 	struct Vector3
 	{
@@ -215,7 +197,6 @@ extern "C"
 		::setter = setter;
 
 		AppendToFile("Getter：" + to_string((UINT)getter) + "\n");
-
 		AppendToFile("Setter：" + to_string((UINT)setter) + "\n");
 	}
 
@@ -226,14 +207,10 @@ extern "C"
 			int index = ::count;
 			transforms[index] = transform;
 
-			AppendToFile("Address：" + to_string((unsigned long long)transform) + "\n");
-
 			positions[index] = position;
 			offsets[index] = sqrt(position.x * position.x + position.y * position.y + position.z * position.z);
 
 			::count++;
-
-			AppendToFile("Count：" + to_string(::count) + "\n");
 		}
 	}
 

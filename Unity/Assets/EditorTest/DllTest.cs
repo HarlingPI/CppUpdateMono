@@ -110,13 +110,13 @@ public unsafe class DllTest
 
     }
 
-    public delegate void SwapInvoke(int start,int count);
+    public delegate void SwapInvoke(int start, int count);
     [Test]
     public void SwapItemTest()
     {
         TestClass[] objs = new TestClass[] { new TestClass(42), new TestClass(43) };
         Debug.Log($"交换前-------------");
-        for (int i = 0;i < objs.Length;i++)
+        for (int i = 0; i < objs.Length; i++)
         {
             objs[i].TestFunc();
         }
@@ -129,7 +129,7 @@ public unsafe class DllTest
         setarray(address);
 
         var swapfunc = DllManager.GetDelegate<SwapInvoke>(dllptr, "SwapItem");
-        swapfunc(0,2);
+        swapfunc(0, 2);
         handle.Free();
         DllManager.FreeLibrary(dllptr);
 
@@ -149,7 +149,7 @@ public unsafe class DllTest
 
         var time = ReckonTime(() =>
         {
-            for (int i = 0;i< count;i++)
+            for (int i = 0; i < count; i++)
             {
                 objs[0].GetPointer();
             }
@@ -166,6 +166,33 @@ public unsafe class DllTest
         });
         Debug.Log($"MarshalArray耗时：{time}ms");
     }
+
+
+    public delegate void InitialProperty(IntPtr getter, IntPtr setter);
+    public delegate void TestFunc(void* ptr);
+    [Test]
+    public void PropertyTest()
+    {
+        var property = typeof(TestClass).GetProperty("Property", BindingFlags.Instance | BindingFlags.Public);
+        IntPtr getter = property.GetMethod.MethodHandle.GetFunctionPointer();
+        IntPtr setter = property.SetMethod.MethodHandle.GetFunctionPointer();
+
+        var dllptr = DllManager.LoadLibrary(Application.dataPath + "/Plugins/x86_64/NativeSDK.dll");
+        //设置属性的方法
+        DllManager.GetDelegate<InitialProperty>(dllptr, "PropertyTest")(getter, setter);
+
+        var obj = new TestClass(21) { Property = 1024 };
+
+        Debug.Log($"Property:{obj.Property}");
+
+        DllManager.GetDelegate<TestFunc>(dllptr, "GetTest")(obj.GetPointer());
+        DllManager.GetDelegate<TestFunc>(dllptr, "SetTest")(obj.GetPointer());
+
+        Debug.Log($"Property:{obj.Property}");
+
+        DllManager.FreeLibrary(dllptr);
+    }
+
     public static double ReckonTime(Action action)
     {
         Stopwatch watch = new Stopwatch();
@@ -180,6 +207,8 @@ public unsafe class DllTest
     public class TestClass
     {
         public int ID;
+
+        public float Property { get; set; }
 
         public TestClass(int id)
         {

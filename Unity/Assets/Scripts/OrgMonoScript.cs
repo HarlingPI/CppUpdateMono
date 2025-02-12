@@ -11,16 +11,30 @@ using UnityEngine;
 /// <remarks></remarks>
 public class OrgMonoScript : MonoBehaviour
 {
-    public float height = 1f;
-    private float offset = 0;
-    private Vector3 orgPos;
-    private void Start()
+    private float[] offsets;
+    private Vector3[] positions;
+    private Transform[] transforms;
+    private void Awake()
     {
-        orgPos = transform.position;
-        offset = orgPos.magnitude;
+        offsets = new float[transform.childCount];
+        positions = new Vector3[transform.childCount];
+        transforms = new Transform[transform.childCount];
+
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            var child = transform.GetChild(i);
+            transforms[i] = transform.GetChild(i);
+            positions[i] = child.position;
+            offsets[i] = positions[i].magnitude;
+        }
     }
     private void Update()
     {
-        transform.position = orgPos + MathF.Sin(offset + Time.timeSinceLevelLoad) * height * Vector3.up;
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            var transform = transforms[i];
+            var offset = new Vector3(0, Mathf.Sin(offsets[i] + Time.timeSinceLevelLoad), 0);
+            transform.position = positions[i] + offset;
+        }
     }
 }
